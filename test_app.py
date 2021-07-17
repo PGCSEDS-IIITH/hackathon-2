@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from main import app
 
-test to check the correct functioning of the /ping route
+# test to check the correct functioning of the /ping route
 def test_ping():
     with TestClient(app) as client:
         response = client.get("/ping")
