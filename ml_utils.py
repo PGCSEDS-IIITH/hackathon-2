@@ -9,6 +9,7 @@ import pandas as pd
 import h2o
 from h2o.automl import H2OAutoML
 from sklearn.pipeline import Pipeline
+import subprocess
 
 
 # define a Gaussain NB classifier
@@ -49,6 +50,10 @@ def load_model():
     acc = accuracy_score(y_test, pipe.predict(X_test))
     print(f"Model trained with accuracy: {round(acc, 3)}")
 
+    #Generating Explainability File
+    # subprocess.call(["jupyter","nbconvert","--to","notebook","--inplace","--execute","dataset/explainable_AI_starter.ipynb"])
+    # subprocess.call(["jupyter","nbconvert","dataset/explainable_AI_starter.ipynb","--no-input","--to","html"])
+    # print("Explainability file generated")
 
 # function to predict the flower using the model
 def predict(query_data):
@@ -60,37 +65,12 @@ def predict(query_data):
     print(f"Model prediction: {classes[prediction]}")
     return classes[prediction]
 
-def explainability():
-    h2o.init()
+# unction to retrain the model as part of the feedback loop
+def retrain(data):
+    # pull out the relevant X and y from the FeedbackIn object
+    X = [list(d.dict().values())[:-1] for d in data]
+    y = [r_classes[d.loan] for d in data]
 
-    # Import the dataset
-    df = pd.read_csv('dataset/german.data', sep=' ', header=None)
-    df = h2o.H2OFrame(df)
-
-    # Reponse column
-    y = 20
-
-    # Split into train & test
-    splits = df.split_frame(ratios = [0.8], seed = 1)
-    train = splits[0]
-    test = splits[1]
-
-    # Run AutoML for 1 minute
-    aml = H2OAutoML(max_runtime_secs=60, seed=1)
-    aml.train(y=y, training_frame=train)
-
-    # Explain leader model & compare with all AutoML models
-    # exa = aml.explain(test)
-
-    # Explain a single H2O model (e.g. leader model from AutoML)
-    exm = aml.leader.explain(test)
-    return exm
-
-# function to retrain the model as part of the feedback loop
-# def retrain(data):
-#     # pull out the relevant X and y from the FeedbackIn object
-#     X = [list(d.dict().values())[:-1] for d in data]
-#     y = [r_classes[d.flower_class] for d in data]
-
-#     # fit the classifier again based on the new data obtained
-#     clf.fit(X, y)
+    # fit the classifier again based on the new data obtained
+    global pipes
+    pipe.fit(X, y)

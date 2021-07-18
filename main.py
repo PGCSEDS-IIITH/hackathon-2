@@ -1,10 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
-from ml_utils import load_model, predict, explainability#, retrain
+from ml_utils import load_model, predict, retrain
 from typing import List
 import sys
 sys.setrecursionlimit(10000)
+from fastapi.responses import FileResponse
+
 
 # defining the main app
 app = FastAPI(title="Cred Scoring", docs_url="/")
@@ -41,13 +43,28 @@ class QueryIn(BaseModel):
 class QueryOut(BaseModel):
     loan: str
 
-# class which is expected in the payload while re-training
-# class FeedbackIn(BaseModel):
-#     sepal_length: float
-#     sepal_width: float
-#     petal_length: float
-#     petal_width: float
-#     flower_class: str
+class FeedbackIn(BaseModel):
+    p1: str = 'A11'
+    p2: int = 6
+    p3: str = 'A34'
+    p4: str = 'A43'
+    p5: int = 1169
+    p6: str = 'A65'
+    p7: str = 'A75'
+    p8: int = 4
+    p9: str = 'A93'
+    p10: str = 'A101'
+    p11: int = 4
+    p12: str = 'A121'
+    p13: int = 67
+    p14: str = 'A143'
+    p15: str = 'A152'
+    p16: int = 2
+    p17: str = 'A173'
+    p18: int = 1
+    p19: str = 'A192'
+    p20: str = 'A201'
+    loan: str = 'Bad'
 
 # Route definitions
 @app.get("/ping")
@@ -67,16 +84,16 @@ def cred_scoring(query_data: QueryIn):
 @app.get("/explain", status_code=200)
 # Healthcheck route to ensure that the API is up and running
 def explain():
-    exm = explainability()
-    return {"Explainability": exm}
+    some_file_path = "dataset/explainable_AI_starter.html"
+    return FileResponse(some_file_path, filename="explain.html")
 
-# @app.post("/feedback_loop", status_code=200)
-# # Route to further train the model based on user input in form of feedback loop
-# # Payload: FeedbackIn containing the parameters and correct flower class
-# # Response: Dict with detail confirming success (200)
-# def feedback_loop(data: List[FeedbackIn]):
-#     retrain(data)
-#     return {"detail": "Feedback loop successful"}
+@app.post("/feedback_loop", status_code=200)
+# Route to further train the model based on user input in form of feedback loop
+# Payload: FeedbackIn containing the parameters and correct loan class
+# Response: Dict with detail confirming success (200)
+def feedback_loop(data: List[FeedbackIn]):
+    retrain(data)
+    return {"detail": "Feedback loop successful"}
 
 
 # Main function to start the app when main.py is called
